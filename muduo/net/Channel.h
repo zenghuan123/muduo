@@ -94,7 +94,7 @@ class Channel : noncopyable
   const int  fd_;
   int        events_;
   int        revents_; // it's the received event types of epoll or poll
-  int        index_; // used by Poller.
+  int        index_; // 表示当前fd的状态，具体使用在 EPollPoller.updateChannell里面
   bool       logHup_;
 
   std::weak_ptr<void> tie_;

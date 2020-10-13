@@ -103,9 +103,12 @@ void EPollPoller::fillActiveChannels(int numEvents,
     activeChannels->push_back(channel);
   }
 }
-
+/**
+ * 当Channel 那边的 read，write 改变时会调用到这里
+ * */
 void EPollPoller::updateChannel(Channel* channel)
 {
+	
   Poller::assertInLoopThread();
   const int index = channel->index();
   LOG_TRACE << "fd = " << channel->fd()
@@ -121,6 +124,8 @@ void EPollPoller::updateChannel(Channel* channel)
     }
     else // index == kDeleted
     {
+      //当某个fd不用监听任何事件时，会从epool中删除fd
+	  //kDeleted不是表示这个fd已经关闭了，不生效了之类
       assert(channels_.find(fd) != channels_.end());
       assert(channels_[fd] == channel);
     }
@@ -140,6 +145,7 @@ void EPollPoller::updateChannel(Channel* channel)
     {
       update(EPOLL_CTL_DEL, channel);
       channel->set_index(kDeleted);
+	  //不监听任何事件，删除同时标记状态
     }
     else
     {

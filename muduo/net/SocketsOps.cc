@@ -22,6 +22,8 @@
 using namespace muduo;
 using namespace muduo::net;
 
+//封装了一些linux 系统的api
+
 namespace
 {
 
@@ -199,6 +201,7 @@ void sockets::toIpPort(char* buf, size_t size,
   size_t end = ::strlen(buf);
   const struct sockaddr_in* addr4 = sockaddr_in_cast(addr);
   uint16_t port = sockets::networkToHost16(addr4->sin_port);
+  
   assert(size > end);
   snprintf(buf+end, size-end, ":%u", port);
 }
