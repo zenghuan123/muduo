@@ -52,7 +52,9 @@ class LengthHeaderCodec : muduo::noncopyable
   void send(muduo::net::TcpConnection* conn,
             const muduo::StringPiece& message)
   {
+
     muduo::net::Buffer buf;
+	
     buf.append(message.data(), message.size());
     int32_t len = static_cast<int32_t>(message.size());
     int32_t be32 = muduo::net::sockets::hostToNetwork32(len);

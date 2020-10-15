@@ -24,6 +24,7 @@ const size_t Buffer::kInitialSize;
 
 ssize_t Buffer::readFd(int fd, int* savedErrno)
 {
+  // TcpConnection的hhandle_read调用过来
   // saved an ioctl()/FIONREAD call to tell how much to read
   char extrabuf[65536];
   struct iovec vec[2];
@@ -36,6 +37,7 @@ ssize_t Buffer::readFd(int fd, int* savedErrno)
   // when extrabuf is used, we read 128k-1 bytes at most.
   const int iovcnt = (writable < sizeof extrabuf) ? 2 : 1;
   const ssize_t n = sockets::readv(fd, vec, iovcnt);
+  
   if (n < 0)
   {
     *savedErrno = errno;

@@ -181,8 +181,11 @@ class Buffer : public muduo::copyable
 
   void append(const char* /*restrict*/ data, size_t len)
   {
+	  //添加数据
     ensureWritableBytes(len);
+	
     std::copy(data, data+len, beginWrite());
+
     hasWritten(len);
   }
 
@@ -193,8 +196,12 @@ class Buffer : public muduo::copyable
 
   void ensureWritableBytes(size_t len)
   {
+	//检查大小够不够
+	//不够扩大
+
     if (writableBytes() < len)
     {
+
       makeSpace(len);
     }
     assert(writableBytes() >= len);
@@ -208,7 +215,7 @@ class Buffer : public muduo::copyable
 
   void hasWritten(size_t len)
   {
-    assert(len <= writableBytes());
+    assert(len <= writableBytes());//检查边界
     writerIndex_ += len;
   }
 
@@ -393,11 +400,14 @@ class Buffer : public muduo::copyable
     {
       // FIXME: move readable data
       buffer_.resize(writerIndex_+len);
+	  //vector扩大
     }
     else
     {
       // move readable data to the front, make space inside buffer
       assert(kCheapPrepend < readerIndex_);
+
+	  //把数据往前挪一下
       size_t readable = readableBytes();
       std::copy(begin()+readerIndex_,
                 begin()+writerIndex_,

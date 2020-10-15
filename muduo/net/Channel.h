@@ -93,7 +93,7 @@ class Channel : noncopyable
   EventLoop* loop_;
   const int  fd_;
   int        events_;
-  int        revents_; // it's the received event types of epoll or poll
+  int        revents_; //在
   int        index_; // 表示当前fd的状态，具体使用在 EPollPoller.updateChannell里面
   bool       logHup_;
 

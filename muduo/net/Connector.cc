@@ -130,6 +130,7 @@ void Connector::connecting(int sockfd)
   setState(kConnecting);
   assert(!channel_);
   channel_.reset(new Channel(loop_, sockfd));
+
   channel_->setWriteCallback(
       std::bind(&Connector::handleWrite, this)); // FIXME: unsafe
   channel_->setErrorCallback(
@@ -161,7 +162,7 @@ void Connector::handleWrite()
 
   if (state_ == kConnecting)
   {
-    int sockfd = removeAndResetChannel();
+    int sockfd = removeAndResetChannel();//移除了全部的事件
     int err = sockets::getSocketError(sockfd);
     if (err)
     {
@@ -171,6 +172,7 @@ void Connector::handleWrite()
     }
     else if (sockets::isSelfConnect(sockfd))
     {
+
       LOG_WARN << "Connector::handleWrite - Self connect";
       retry(sockfd);
     }

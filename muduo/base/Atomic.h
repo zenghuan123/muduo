@@ -12,7 +12,7 @@
 
 namespace muduo
 {
-
+//原子操作
 namespace detail
 {
 template<typename T>

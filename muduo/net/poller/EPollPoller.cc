@@ -89,6 +89,7 @@ Timestamp EPollPoller::poll(int timeoutMs, ChannelList* activeChannels)
 void EPollPoller::fillActiveChannels(int numEvents,
                                      ChannelList* activeChannels) const
 {
+ //把epoll的返回值 哪个 fd，什么事件保存到activeChannel里面
   assert(implicit_cast<size_t>(numEvents) <= events_.size());
   for (int i = 0; i < numEvents; ++i)
   {

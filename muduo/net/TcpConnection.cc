@@ -25,6 +25,8 @@ void muduo::net::defaultConnectionCallback(const TcpConnectionPtr& conn)
   LOG_TRACE << conn->localAddress().toIpPort() << " -> "
             << conn->peerAddress().toIpPort() << " is "
             << (conn->connected() ? "UP" : "DOWN");
+   //使用时需要判断 connected  和disconnected 状态
+   //客户端用不上
   // do not call conn->forceClose(), because some users want to register message callback only.
 }
 
@@ -83,6 +85,7 @@ string TcpConnection::getTcpInfoString() const
   socket_->getTcpInfoString(buf, sizeof buf);
   return buf;
 }
+//发送结构体,发送char*
 
 void TcpConnection::send(const void* data, int len)
 {
@@ -99,11 +102,12 @@ void TcpConnection::send(const StringPiece& message)
     }
     else
     {
+		//sendInLoop重载了多个版本
       void (TcpConnection::*fp)(const StringPiece& message) = &TcpConnection::sendInLoop;
       loop_->runInLoop(
           std::bind(fp,
                     this,     // FIXME
-                    message.as_string()));
+                    message.as_string()));//拷贝一份数据,传到io线程里面
                     //std::forward<string>(message)));
     }
   }
@@ -138,6 +142,8 @@ void TcpConnection::sendInLoop(const StringPiece& message)
 
 void TcpConnection::sendInLoop(const void* data, size_t len)
 {
+	//最终调用到的地方
+	//发送数据
   loop_->assertInLoopThread();
   ssize_t nwrote = 0;
   size_t remaining = len;
@@ -150,7 +156,9 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
   // if no thing in output queue, try writing directly
   if (!channel_->isWriting() && outputBuffer_.readableBytes() == 0)
   {
+	  //channel没有监听可写事件，并且发送缓冲区数据大小为0
     nwrote = sockets::write(channel_->fd(), data, len);
+	
     if (nwrote >= 0)
     {
       remaining = len - nwrote;
@@ -176,19 +184,24 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
   assert(remaining <= len);
   if (!faultError && remaining > 0)
   {
+	  //没有出错
     size_t oldLen = outputBuffer_.readableBytes();
     if (oldLen + remaining >= highWaterMark_
         && oldLen < highWaterMark_
         && highWaterMarkCallback_)
     {
+		//触发一个事件，表示缓冲区快满了
       loop_->queueInLoop(std::bind(highWaterMarkCallback_, shared_from_this(), oldLen + remaining));
     }
     outputBuffer_.append(static_cast<const char*>(data)+nwrote, remaining);
     if (!channel_->isWriting())
     {
+	//开启监听可写事件
       channel_->enableWriting();
     }
   }
+  //这里发送时出错没有退出
+  //也没有向调用方汇报
 }
 
 void TcpConnection::shutdown()
@@ -349,6 +362,9 @@ void TcpConnection::handleRead(Timestamp receiveTime)
   loop_->assertInLoopThread();
   int savedErrno = 0;
   ssize_t n = inputBuffer_.readFd(channel_->fd(), &savedErrno);
+
+
+
   if (n > 0)
   {
     messageCallback_(shared_from_this(), &inputBuffer_, receiveTime);
@@ -367,6 +383,8 @@ void TcpConnection::handleRead(Timestamp receiveTime)
 
 void TcpConnection::handleWrite()
 {
+  //监听了socket可以写的事件
+
   loop_->assertInLoopThread();
   if (channel_->isWriting())
   {
@@ -378,7 +396,9 @@ void TcpConnection::handleWrite()
       outputBuffer_.retrieve(n);
       if (outputBuffer_.readableBytes() == 0)
       {
+		//发完了 取消注册可写的事件
         channel_->disableWriting();
+		//触发一下回调
         if (writeCompleteCallback_)
         {
           loop_->queueInLoop(std::bind(writeCompleteCallback_, shared_from_this()));

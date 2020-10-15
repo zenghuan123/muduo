@@ -28,8 +28,8 @@ TcpServer::TcpServer(EventLoop* loop,
     name_(nameArg),
     acceptor_(new Acceptor(loop, listenAddr, option == kReusePort)),
     threadPool_(new EventLoopThreadPool(loop, name_)),
-    connectionCallback_(defaultConnectionCallback),
-    messageCallback_(defaultMessageCallback),
+    connectionCallback_(defaultConnectionCallback),// 新连接回调
+    messageCallback_(defaultMessageCallback), // 新数据回调
     nextConnId_(1)
 {
 	//设置监听端口的，回调用于接收连接
@@ -59,7 +59,7 @@ void TcpServer::setThreadNum(int numThreads)
 
 void TcpServer::start()
 {
-  if (started_.getAndSet(1) == 0)
+  if (started_.getAndSet(1) == 0)//避免多次调用start的判断
   {
     threadPool_->start(threadInitCallback_);
 
@@ -90,11 +90,11 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
                                           localAddr,
                                           peerAddr));
   connections_[connName] = conn;
-  conn->setConnectionCallback(connectionCallback_);
+  conn->setConnectionCallback(connectionCallback_);		
   conn->setMessageCallback(messageCallback_);
-  conn->setWriteCompleteCallback(writeCompleteCallback_);
+  conn->setWriteCompleteCallback(writeCompleteCallback_);//默认空函数
   conn->setCloseCallback(
-      std::bind(&TcpServer::removeConnection, this, _1)); // FIXME: unsafe
+      std::bind(&TcpServer::removeConnection, this, _1)); // FIXME: unsafe // 用户注册了这个事件之后，应该要手动调用一下removeConnection方法了
   ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished, conn));
 }
 

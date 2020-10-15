@@ -249,7 +249,7 @@ int sockets::getSocketError(int sockfd)
 {
   int optval;
   socklen_t optlen = static_cast<socklen_t>(sizeof optval);
-
+	//获取一个套接字的各种数据
   if (::getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &optval, &optlen) < 0)
   {
     return errno;
@@ -264,6 +264,7 @@ struct sockaddr_in6 sockets::getLocalAddr(int sockfd)
 {
   struct sockaddr_in6 localaddr;
   memZero(&localaddr, sizeof localaddr);
+
   socklen_t addrlen = static_cast<socklen_t>(sizeof localaddr);
   if (::getsockname(sockfd, sockaddr_cast(&localaddr), &addrlen) < 0)
   {
@@ -286,7 +287,9 @@ struct sockaddr_in6 sockets::getPeerAddr(int sockfd)
 
 bool sockets::isSelfConnect(int sockfd)
 {
+	//自身连接
   struct sockaddr_in6 localaddr = getLocalAddr(sockfd);
+
   struct sockaddr_in6 peeraddr = getPeerAddr(sockfd);
   if (localaddr.sin6_family == AF_INET)
   {

@@ -13,7 +13,7 @@
 using namespace muduo;
 using namespace muduo::net;
 
-EventLoopThread::EventLoopThread(const ThreadInitCallback& cb,
+EventLoopThread::EventLoopThread(const ThreadInitCallback& cb,//调用loop前的初始化，在io线程内回调
                                  const string& name)
   : loop_(NULL),
     exiting_(false),
@@ -43,7 +43,7 @@ EventLoop* EventLoopThread::startLoop()
 
   EventLoop* loop = NULL;
   {
-    MutexLockGuard lock(mutex_);
+    MutexLockGuard lock(mutex_);//std::lock_guard
     while (loop_ == NULL)
     {
       cond_.wait();
@@ -69,7 +69,7 @@ void EventLoopThread::threadFunc()
     cond_.notify();
   }
 
-  loop.loop();
+  loop.loop();//epool 至少有wakeupChannel_的事件监听
   //assert(exiting_);
   MutexLockGuard lock(mutex_);
   loop_ = NULL;

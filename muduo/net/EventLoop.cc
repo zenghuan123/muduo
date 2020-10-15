@@ -102,6 +102,7 @@ EventLoop::~EventLoop()
 
 void EventLoop::loop()
 {
+	//开启事件循环
   assert(!looping_);
   assertInLoopThread();
   looping_ = true;
@@ -111,8 +112,8 @@ void EventLoop::loop()
   while (!quit_)
   {
     activeChannels_.clear();
-    pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);
-    ++iteration_;
+    pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_);//调用epoll的wait，wait的结果放入activeChannels里面
+    ++iteration_;// 为啥记个数
     if (Logger::logLevel() <= Logger::TRACE)
     {
       printActiveChannels();

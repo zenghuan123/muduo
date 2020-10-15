@@ -51,6 +51,7 @@ namespace muduo
 // For passing C-style string argument to a function.
 class StringArg // copyable
 {
+
  public:
   StringArg(const char* str)
     : str_(str)
@@ -67,6 +68,8 @@ class StringArg // copyable
 };
 
 class StringPiece {
+		//char* 和string, 以及封装了一些方法
+		//
  private:
   const char*   ptr_;
   int           length_;
@@ -128,7 +131,7 @@ class StringPiece {
   bool operator!=(const StringPiece& x) const {
     return !(*this == x);
   }
-
+//操作符重载
 #define STRINGPIECE_BINARY_PREDICATE(cmp,auxcmp)                             \
   bool operator cmp (const StringPiece& x) const {                           \
     int r = memcmp(ptr_, x.ptr_, length_ < x.length_ ? length_ : x.length_); \
