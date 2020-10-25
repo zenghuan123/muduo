@@ -80,6 +80,7 @@ void Acceptor::handleRead()
     // By Marc Lehmann, author of libev.
     if (errno == EMFILE)
     {
+		//当打开的文件描述符，过多时这里的处理的方法
       ::close(idleFd_);
       idleFd_ = ::accept(acceptSocket_.fd(), NULL, NULL);
       ::close(idleFd_);

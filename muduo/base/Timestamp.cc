@@ -55,8 +55,8 @@ string Timestamp::toFormattedString(bool showMicroseconds) const
 Timestamp Timestamp::now()
 {
   struct timeval tv;
-  gettimeofday(&tv, NULL);
-  int64_t seconds = tv.tv_sec;
-  return Timestamp(seconds * kMicroSecondsPerSecond + tv.tv_usec);
+  gettimeofday(&tv, NULL);//获取当天的时间
+  int64_t seconds = tv.tv_sec;//秒数
+  return Timestamp(seconds * kMicroSecondsPerSecond + tv.tv_usec);//微妙数
 }
 

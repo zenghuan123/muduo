@@ -29,6 +29,7 @@ class Logger
   };
 
   // compile time calculation of basename of source file
+  // __FILE__貌似只是保存一下这个
   class SourceFile
   {
    public:

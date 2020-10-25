@@ -26,13 +26,13 @@ using namespace muduo::net;
 
 namespace
 {
-__thread EventLoop* t_loopInThisThread = 0;
+__thread EventLoop* t_loopInThisThread = 0;//线程局部存储, 每个线程拥有一个这个对象
 
 const int kPollTimeMs = 10000;
 
 int createEventfd()
 {
-  int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+  int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);//没有设置EFD_SEMAPHORE 表示写了数据之后，读完数据没了，设置EFD_SEMAPHORE之后，每次write相当于在之前的数据添加，read的一次就减少1
   if (evtfd < 0)
   {
     LOG_SYSERR << "Failed in eventfd";
@@ -47,7 +47,13 @@ class IgnoreSigPipe
  public:
   IgnoreSigPipe()
   {
-    ::signal(SIGPIPE, SIG_IGN);
+    ::signal(SIGPIPE, SIG_IGN);//不忽略会导致进程退出
+	/*
+	”对一个已经收到FIN包的socket调用read方法, 如果接收缓冲已空, 则返回0, 
+	这就是常说的表示连接关闭. 但第一次对其调用write方法时, 如果发送缓冲没问题, 
+	会返回正确写入(发送). 但发送的报文会导致对端发送RST报文, 因为对端的socket已经调用了close, 
+	完全关闭, 既不发送, 也不接收数据. 所以, 第二次调用write方法(假设在收到RST之后), 会生成SIGPIPE信号, 导致进程退出."
+	*/
     // LOG_TRACE << "Ignore SIGPIPE";
   }
 };
@@ -62,16 +68,16 @@ EventLoop* EventLoop::getEventLoopOfCurrentThread()
 }
 
 EventLoop::EventLoop()
-  : looping_(false),
-    quit_(false),
-    eventHandling_(false),
-    callingPendingFunctors_(false),
-    iteration_(0),
-    threadId_(CurrentThread::tid()),
-    poller_(Poller::newDefaultPoller(this)),
-    timerQueue_(new TimerQueue(this)),
-    wakeupFd_(createEventfd()),
-    wakeupChannel_(new Channel(this, wakeupFd_)),
+  : looping_(false),//
+    quit_(false),// loop循环用于
+    eventHandling_(false),//true表示开始记录事件了
+    callingPendingFunctors_(false),//
+    iteration_(0),//循环次数
+    threadId_(CurrentThread::tid()),//线程id
+    poller_(Poller::newDefaultPoller(this)),//默认epoll
+    timerQueue_(new TimerQueue(this)),//定时器
+    wakeupFd_(createEventfd()),// 多线程环境下用于唤醒io线程的fd
+    wakeupChannel_(new Channel(this, wakeupFd_)),//封装成Channel
     currentActiveChannel_(NULL)
 {
   LOG_DEBUG << "EventLoop created " << this << " in thread " << threadId_;
@@ -167,6 +173,8 @@ void EventLoop::queueInLoop(Functor cb)
 
   if (!isInLoopThread() || callingPendingFunctors_)
   {
+	  //不在在线程里面需要唤醒
+	  //或者正在处理上一个pendingFunctors_也要再次唤醒，以处理这次插入的
     wakeup();
   }
 }
@@ -234,6 +242,7 @@ void EventLoop::abortNotInLoopThread()
 
 void EventLoop::wakeup()
 {
+	//调用多次会怎么样
   uint64_t one = 1;
   ssize_t n = sockets::write(wakeupFd_, &one, sizeof one);
   if (n != sizeof one)
@@ -258,8 +267,9 @@ void EventLoop::doPendingFunctors()
   callingPendingFunctors_ = true;
 
   {
-  MutexLockGuard lock(mutex_);
-  functors.swap(pendingFunctors_);
+	//临界区
+  MutexLockGuard lock(mutex_);//对象生命周期内加锁，销毁时释放锁
+  functors.swap(pendingFunctors_);//拷贝一份，然后再去读，尽快接锁
   }
 
   for (const Functor& functor : functors)

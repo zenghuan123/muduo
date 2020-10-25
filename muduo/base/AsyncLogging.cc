@@ -48,6 +48,7 @@ void AsyncLogging::append(const char* logline, int len)
     }
     else
     {
+		//log太多了
       currentBuffer_.reset(new Buffer); // Rarely happens
     }
     currentBuffer_->append(logline, len);
@@ -58,7 +59,7 @@ void AsyncLogging::append(const char* logline, int len)
 void AsyncLogging::threadFunc()
 {
   assert(running_ == true);
-  latch_.countDown();
+  latch_.countDown();//唤醒调用start的函数表示asynclogging已经初始化完了，可以开始跑了
   LogFile output(basename_, rollSize_, false);
   BufferPtr newBuffer1(new Buffer);
   BufferPtr newBuffer2(new Buffer);

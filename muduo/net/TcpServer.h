@@ -106,9 +106,9 @@ class TcpServer : noncopyable
   std::shared_ptr<EventLoopThreadPool> threadPool_;
   ConnectionCallback connectionCallback_;
   MessageCallback messageCallback_;
-  WriteCompleteCallback writeCompleteCallback_;
-  ThreadInitCallback threadInitCallback_;
-  AtomicInt32 started_;
+  WriteCompleteCallback writeCompleteCallback_;// 某个连接的全部数据写完了，会回调
+  ThreadInitCallback threadInitCallback_;		//基本上是用来记录一下EventLoop*loop,只是主线程需要记录其他线程跑了哪些EventLoop，这样才好转发消息，需要注意的是这个方法是EventLoop所在线程调用的
+  AtomicInt32 started_;							
   // always in loop thread
   int nextConnId_;
   ConnectionMap connections_;

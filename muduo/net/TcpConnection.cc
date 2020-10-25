@@ -150,6 +150,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
   bool faultError = false;
   if (state_ == kDisconnected)
   {
+	  //已经断开了，不发送
     LOG_WARN << "disconnected, give up writing";
     return;
   }
@@ -222,6 +223,7 @@ void TcpConnection::shutdownInLoop()
   {
     // we are not writing
     socket_->shutdownWrite();
+
   }
 }
 
@@ -359,11 +361,11 @@ void TcpConnection::connectDestroyed()
 
 void TcpConnection::handleRead(Timestamp receiveTime)
 {
+  //由于Channel那边没有处理EPOLLIN|EPOLLHUP这种情况
+
   loop_->assertInLoopThread();
   int savedErrno = 0;
   ssize_t n = inputBuffer_.readFd(channel_->fd(), &savedErrno);
-
-
 
   if (n > 0)
   {
@@ -371,6 +373,7 @@ void TcpConnection::handleRead(Timestamp receiveTime)
   }
   else if (n == 0)
   {
+	
     handleClose();
   }
   else
@@ -442,6 +445,7 @@ void TcpConnection::handleClose()
 
 void TcpConnection::handleError()
 {
+
   int err = sockets::getSocketError(channel_->fd());
   LOG_ERROR << "TcpConnection::handleError [" << name_
             << "] - SO_ERROR = " << err << " " << strerror_tl(err);

@@ -78,6 +78,7 @@ void Connector::stopInLoop()
 void Connector::connect()
 {
   int sockfd = sockets::createNonblockingOrDie(serverAddr_.family());
+  
   int ret = sockets::connect(sockfd, serverAddr_.getSockAddr());
   int savedErrno = (ret == 0) ? 0 : errno;
   switch (savedErrno)
@@ -130,6 +131,7 @@ void Connector::connecting(int sockfd)
   setState(kConnecting);
   assert(!channel_);
   channel_.reset(new Channel(loop_, sockfd));
+  
 
   channel_->setWriteCallback(
       std::bind(&Connector::handleWrite, this)); // FIXME: unsafe
@@ -172,7 +174,7 @@ void Connector::handleWrite()
     }
     else if (sockets::isSelfConnect(sockfd))
     {
-
+	  //判断是否是自身连接
       LOG_WARN << "Connector::handleWrite - Self connect";
       retry(sockfd);
     }

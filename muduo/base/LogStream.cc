@@ -232,7 +232,7 @@ void LogStream::staticCheck()
   static_assert(kMaxNumericSize - 10 > std::numeric_limits<long long>::digits10,
                 "kMaxNumericSize is large enough");
 }
-
+//把各种类型转成字符串
 template<typename T>
 void LogStream::formatInteger(T v)
 {

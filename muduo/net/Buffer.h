@@ -112,6 +112,7 @@ class Buffer : public muduo::copyable
   // the evaluation of two functions are unspecified
   void retrieve(size_t len)
   {
+	  //消耗指定数据，调用前记得先读完数据
     assert(len <= readableBytes());
     if (len < readableBytes())
     {
@@ -158,6 +159,7 @@ class Buffer : public muduo::copyable
 
   string retrieveAllAsString()
   {
+	//消耗掉缓冲区所有数据，并作为字符串返回
     return retrieveAsString(readableBytes());
   }
 

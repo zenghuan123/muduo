@@ -16,7 +16,7 @@
 
 using namespace muduo;
 using namespace muduo::net;
-
+//默认
 const int Channel::kNoneEvent = 0;
 const int Channel::kReadEvent = POLLIN | POLLPRI;
 const int Channel::kWriteEvent = POLLOUT;
@@ -83,10 +83,13 @@ void Channel::handleEvent(Timestamp receiveTime)
 void Channel::handleEventWithGuard(Timestamp receiveTime)
 {
 	//分发一下事件
+	
   eventHandling_ = true;
   LOG_TRACE << reventsToString();
   if ((revents_ & POLLHUP) && !(revents_ & POLLIN))
   {
+    //水平触发,如果是边沿触发就有bug
+	//意思是把所有数据再读完，然后回调close
     if (logHup_)
     {
       LOG_WARN << "fd = " << fd_ << " Channel::handle_event() POLLHUP";
@@ -96,6 +99,7 @@ void Channel::handleEventWithGuard(Timestamp receiveTime)
 
   if (revents_ & POLLNVAL)
   {
+	  //使用pool时，文件描述符未打开???
     LOG_WARN << "fd = " << fd_ << " Channel::handle_event() POLLNVAL";
   }
 

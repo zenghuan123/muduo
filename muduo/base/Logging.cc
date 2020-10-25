@@ -53,7 +53,7 @@ Logger::LogLevel initLogLevel()
   else
     return Logger::INFO;
 }
-
+//log 等级
 Logger::LogLevel g_logLevel = initLogLevel();
 
 const char* LogLevelName[Logger::NUM_LOG_LEVELS] =
@@ -95,14 +95,14 @@ inline LogStream& operator<<(LogStream& s, const Logger::SourceFile& v)
 
 void defaultOutput(const char* msg, int len)
 {
-  size_t n = fwrite(msg, 1, len, stdout);
+  size_t n = fwrite(msg, 1, len, stdout);//写到标准输出
   //FIXME check n
   (void)n;
 }
 
 void defaultFlush()
 {
-  fflush(stdout);
+  fflush(stdout);//刷新,因为马上进程要退出了
 }
 
 Logger::OutputFunc g_output = defaultOutput;
@@ -120,6 +120,7 @@ Logger::Impl::Impl(LogLevel level, int savedErrno, const SourceFile& file, int l
     line_(line),
     basename_(file)
 {
+	//消息头吧
   formatTime();
   CurrentThread::tid();
   stream_ << T(CurrentThread::tidString(), CurrentThread::tidStringLength());
@@ -174,6 +175,7 @@ void Logger::Impl::finish()
 }
 
 Logger::Logger(SourceFile file, int line)
+
   : impl_(INFO, 0, file, line)
 {
 }
@@ -196,6 +198,7 @@ Logger::Logger(SourceFile file, int line, bool toAbort)
 
 Logger::~Logger()
 {
+  //loger对象生命周期结束时，输出
   impl_.finish();
   const LogStream::Buffer& buf(stream().buffer());
   g_output(buf.data(), buf.length());

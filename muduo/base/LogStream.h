@@ -81,7 +81,7 @@ class LogStream : noncopyable
 {
   typedef LogStream self;
  public:
-  typedef detail::FixedBuffer<detail::kSmallBuffer> Buffer;
+  typedef detail::FixedBuffer<detail::kSmallBuffer> Buffer;//相当于一个字符数组,记录了已经使用的大小
 
   self& operator<<(bool v)
   {

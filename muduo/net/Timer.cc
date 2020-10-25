@@ -11,7 +11,7 @@
 using namespace muduo;
 using namespace muduo::net;
 
-AtomicInt64 Timer::s_numCreated_;
+AtomicInt64 Timer::s_numCreated_;//自增的定时器id,原子操作
 
 void Timer::restart(Timestamp now)
 {

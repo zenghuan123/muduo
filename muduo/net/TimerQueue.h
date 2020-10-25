@@ -55,9 +55,9 @@ class TimerQueue : noncopyable
   // This requires heterogeneous comparison lookup (N3465) from C++14
   // so that we can find an T* in a set<unique_ptr<T>>.
   typedef std::pair<Timestamp, Timer*> Entry;
-  typedef std::set<Entry> TimerList;
+  typedef std::set<Entry> TimerList;//按照Timestamp排序,
   typedef std::pair<Timer*, int64_t> ActiveTimer;
-  typedef std::set<ActiveTimer> ActiveTimerSet;
+  typedef std::set<ActiveTimer> ActiveTimerSet;//按照主要是取消定时器时需要使用Timer*和int_64_t来查找,TimerId也就是保存了这两个值
 
   void addTimerInLoop(Timer* timer);
   void cancelInLoop(TimerId timerId);
