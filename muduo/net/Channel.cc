@@ -88,7 +88,7 @@ void Channel::handleEventWithGuard(Timestamp receiveTime)
   LOG_TRACE << reventsToString();
   if ((revents_ & POLLHUP) && !(revents_ & POLLIN))
   {
-    //水平触发,如果是边沿触发就有bug
+	  //EPOLLHUP 对方关闭读写
 	//意思是把所有数据再读完，然后回调close
     if (logHup_)
     {
@@ -108,7 +108,8 @@ void Channel::handleEventWithGuard(Timestamp receiveTime)
     if (errorCallback_) errorCallback_();
   }
   if (revents_ & (POLLIN | POLLPRI | POLLRDHUP))
-  {
+  { 
+	  //EPOLLRDHUP 对方关机写
     if (readCallback_) readCallback_(receiveTime);
   }
   if (revents_ & POLLOUT)

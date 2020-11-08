@@ -44,11 +44,12 @@ void AsyncLogging::append(const char* logline, int len)
 
     if (nextBuffer_)
     {
+	//nextBuffer有效指针
       currentBuffer_ = std::move(nextBuffer_);
     }
     else
     {
-		//log太多了
+		//log太多了,之前缓存的数据没写完，只能再申请内存了
       currentBuffer_.reset(new Buffer); // Rarely happens
     }
     currentBuffer_->append(logline, len);
@@ -77,18 +78,20 @@ void AsyncLogging::threadFunc()
       muduo::MutexLockGuard lock(mutex_);
       if (buffers_.empty())  // unusual usage!
       {
+		//带超时的信号量
         cond_.waitForSeconds(flushInterval_);
+
       }
-      buffers_.push_back(std::move(currentBuffer_));
-      currentBuffer_ = std::move(newBuffer1);
-      buffersToWrite.swap(buffers_);
+      buffers_.push_back(std::move(currentBuffer_));//把 log的缓冲区拿过来
+      currentBuffer_ = std::move(newBuffer1);// 赋一个新的缓冲区
+      buffersToWrite.swap(buffers_);// 交换
       if (!nextBuffer_)
       {
         nextBuffer_ = std::move(newBuffer2);
       }
     }
 
-    assert(!buffersToWrite.empty());
+    assert(!buffersToWrite.empty());		
 
     if (buffersToWrite.size() > 25)
     {
@@ -99,6 +102,7 @@ void AsyncLogging::threadFunc()
       fputs(buf, stderr);
       output.append(buf, static_cast<int>(strlen(buf)));
       buffersToWrite.erase(buffersToWrite.begin()+2, buffersToWrite.end());
+	  //丢弃数据？？？ 
     }
 
     for (const auto& buffer : buffersToWrite)

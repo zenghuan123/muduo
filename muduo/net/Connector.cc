@@ -84,27 +84,27 @@ void Connector::connect()
   switch (savedErrno)
   {
     case 0:
-    case EINPROGRESS:
-    case EINTR:
-    case EISCONN:
+    case EINPROGRESS://Operation now in progress 异步操作会返回这个 
+    case EINTR:	//Interrupted system call  借助epoll 判断是否可写来判断连接是否建立成功
+    case EISCONN:// 连接已经建立成功
       connecting(sockfd);
       break;
 
-    case EAGAIN:
-    case EADDRINUSE:
-    case EADDRNOTAVAIL:
-    case ECONNREFUSED:
-    case ENETUNREACH:
+    case EAGAIN://Try again
+    case EADDRINUSE://Address already in use  内核需要选择一个本地端口去connect服务器 
+    case EADDRNOTAVAIL://Cannot assign requested address  端口处于TIME_WAIT但是 没有启用reuse
+    case ECONNREFUSED://Connection refused
+    case ENETUNREACH://Network is unreachable
       retry(sockfd);
       break;
 
-    case EACCES:
-    case EPERM:
-    case EAFNOSUPPORT:
-    case EALREADY:
-    case EBADF:
-    case EFAULT:
-    case ENOTSOCK:
+    case EACCES://Permission denied
+    case EPERM://Operation not permitted
+    case EAFNOSUPPORT://Address family not supported by protocol 
+    case EALREADY: // Operation already in progress 先去的连接操作还未完成
+    case EBADF: //Bad file number
+    case EFAULT://Bad address
+    case ENOTSOCK://Socket operation on non-socket 
       LOG_SYSERR << "connect error in Connector::startInLoop " << savedErrno;
       sockets::close(sockfd);
       break;

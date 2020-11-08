@@ -79,8 +79,13 @@ void Acceptor::handleRead()
     // accept()ing when you can't" in libev's doc.
     // By Marc Lehmann, author of libev.
     if (errno == EMFILE)
-    {
-		//当打开的文件描述符，过多时这里的处理的方法
+    {	
+		//当打开的文件描述符超出上限时
+		//返回这个错，此时客户端的连接没有拒绝，仍然在队列里
+		// epoll_wait 仍然触发 可读事件，导致busy loop
+
+		 
+		//先close掉之前用于占位的文件描述符 空出一个fd来
       ::close(idleFd_);
       idleFd_ = ::accept(acceptSocket_.fd(), NULL, NULL);
       ::close(idleFd_);
